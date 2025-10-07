@@ -1,25 +1,23 @@
-import express from 'express'
+import 'dotenv/config'; // ✅ Load environment variables first
+import express from 'express';
 import cors from 'cors';
-import { clerkMiddleware, requireAuth } from '@clerk/express'
-import dotenv from 'dotenv'
+import { clerkMiddleware, requireAuth } from '@clerk/express';
 import Airouter from './routes/AIroutes.js';
 
 const app = express();
-dotenv.config();
+const port = process.env.PORT || 4000;
 
-const port = process.env.PORT || 4000
-
-app.use(cors())
+app.use(cors());
 app.use(express.json());
-app.use(clerkMiddleware()) //if user found then attaches auth object with request object under auth key
+app.use(clerkMiddleware());
 
-app.get("/",(req,res) => {
-    res.send("Home route");
-})
-app.use('/api/ai',Airouter);
+app.get('/', (req, res) => {
+  res.send('Home route');
+});
 
-app.use(requireAuth())
+app.use('/api/ai', Airouter);
+app.use(requireAuth());
 
-app.listen(port,() => {
-    console.log(`app listening on port ${port}`);
-})
+app.listen(port, () => {
+  console.log(`✅ App listening on port ${port}`);
+});

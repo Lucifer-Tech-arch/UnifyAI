@@ -2,7 +2,7 @@ import { clerkClient } from "@clerk/express";
 
 export const auth = async (req, res, next) => {
   try {
-    const { userId } = req.auth;
+    const { userId } = req.auth();
 
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -10,24 +10,15 @@ export const auth = async (req, res, next) => {
 
     const user = await clerkClient.users.getUser(userId);
 
-    // Check plan from metadata (you can also store it in publicMetadata)
+    // Determine plan
     const plan = user.privateMetadata.plan || "free";
-    const hasPremiumPlan = plan === "premium";
+    const isPremium = plan === "premium";
 
-    // Check and update free usage count
-    if (!hasPremiumPlan && user.privateMetadata.free_usage) {
-      req.free_usage = user.privateMetadata.free_usage;
-    } else {
-      await clerkClient.users.updateUserMetadata(userId, {
-        privateMetadata: {
-          ...user.privateMetadata,
-          free_usage: 0,
-        },
-      });
-      req.free_usage = 0;
-    }
+    // Attach plan and free usage to request
+    req.plan = isPremium ? "premium" : "free";
+    req.free_usage = isPremium ? 0 : (user.privateMetadata.free_usage || 0);
+    req.user = user; // optional: attach user for convenience
 
-    req.plan = hasPremiumPlan ? "premium" : "free";
     next();
   } catch (error) {
     console.error("Auth middleware error:", error);

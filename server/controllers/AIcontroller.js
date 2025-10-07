@@ -13,6 +13,7 @@ export const generateArticle = async (req, res) => {
         const { prompt, length } = req.body;
         const plan = req.plan;
         const free_usage = req.free_usage;
+        const user = await clerkClient.users.getUser(userId);
         if (plan !== 'premium' && free_usage >= 10) {
             return res.json({ success: false, message: "Free limit reached. Upgrade to continue!" });
         }
@@ -28,20 +29,20 @@ export const generateArticle = async (req, res) => {
             max_completion_tokens: length
         });
         const content = response.choices[0].message.content;
-        await sql ` INSERT INTRO creations (user_id, prompt, content, type
-        VALUES ${userId}, ${prompt}, ${content}, article)`;
+        await sql`INSERT INTO creations (user_id, prompt, content, type)
+        VALUES (${userId}, ${prompt}, ${content}, 'article');`;
 
-        if(plan !== premium) {
+        if (plan !== 'premium') {
             await clerkClient.users.updateUserMetadata(userId, {
                 privateMetadata: {
                     ...user.privateMetadata,
-                    free_usage:  free_usage + 1
+                    free_usage: free_usage + 1
                 }
             })
         }
-        res.json({sucess: true, content});
+        res.json({ sucess: true, content });
     } catch (error) {
         console.log(error);
-        res,json({sucess: false, message : error.message});
+        res.json({ sucess: false, message: error.message });
     }
 }
