@@ -6,6 +6,12 @@ import { SquarePen, Hash, Image, Eraser, Scissors, FileText } from 'lucide-react
 import ai_gen_img_1 from "./ai_gen_img_1.png";
 import ai_gen_img_2 from "./ai_gen_img_2.png";
 import ai_gen_img_3 from "./ai_gen_img_3.png";
+import facebook from './facebookpng.png';
+import netflix from './netflix.png';
+import linkdin from './linkdin.png';
+import insta from './insta.png';
+import framer from './framer.png'
+import google from './google.png';
 import logo from './Logo.png'
 
 export const assets = {
@@ -22,7 +28,7 @@ export const AiToolsData = [
         description: 'Generate high-quality, engaging articles on any topic with our AI writing technology.',
         Icon: SquarePen,
         bg: { from: '#3588F2', to: '#0BB0D7' },
-        path: '/ai/write-article'
+        path: '/ai/write-articles'
     },
     {
         title: 'Blog Title Generator',
@@ -175,4 +181,38 @@ export const dummyPublishedCreationData = [
         "updated_at": "2025-06-23T11:29:44.434Z",
         "__v": 1
     },
+]
+
+export const dummyadds = [
+   {
+    id: 1,
+    name: "facebook",
+    image: facebook,
+   },
+   {
+    id: 2,
+    name: "insta",
+    image: insta
+   },
+   {
+    id: 3,
+    name: "linkdin",
+    image: linkdin
+   },
+   {
+    id: 4,
+    name: "framer",
+    image: framer
+   },
+   {
+    id: 5,
+    name: "netflix",
+    image: netflix
+   },
+   {
+    id: 6,
+    name: "google",
+    image: google
+   }
+
 ]
