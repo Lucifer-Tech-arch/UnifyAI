@@ -53,10 +53,56 @@ export const generateArticle = async (req, res) => {
         }
       });
     }
-
     res.json({ success: true, content });
   } catch (error) {
     console.error("Generate Article error:", error);
     res.json({ success: false, message: error.message });
   }
 };
+
+export const generateblogtitle = async(req,res) => {
+  try {
+    const { userId, plan, free_usage } = req;
+    const { prompt, category } = req.body;
+
+    // Double-check we have userId
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    // Enforce usage limit for free plan
+    if (plan === "free" && free_usage >= 10) {
+      return res.json({
+        success: false,
+        message: "Free limit reached. Upgrade to continue!"
+      });
+    }
+    const allowedcateogary = ['General', 'Technology', 'Buisness', 'Health','LifeStyle', 'Education', 'Travel', 'Food'];
+    const selectedcategory = allowedcateogary.includes(category) ? category  : 'General';
+    const finalprompt = `Generate a cachy blog title about ${prompt} in ${selectedcategory}`
+     const response = await AI.chat.completions.create({
+      model: "gemini-2.0-flash",
+      messages: [{ role: "user", content: finalprompt }],
+      temperature: 0.7,
+      max_completion_tokens: 100
+    });
+     const content = response.choices[0].message.content;
+
+    // Save in your SQL table
+    await sql`
+      INSERT INTO creations (user_id, prompt, content, type)
+      VALUES (${userId}, ${prompt}, ${content}, 'blog-title');
+    `;
+    if(plan !== 'premium') {
+      await clerkClient.users.updateUserMetadata(userId, {
+        privateMetadata: {
+          free_usage : free_usage +1
+        }
+      })
+    }
+    return res.json({success: true, content});
+  } catch (error) {
+     console.log(error);
+     return res.json({sucess: false, message: error.message});
+  }
+}
