@@ -22,7 +22,8 @@
     "express": "^5.1.0",
     "form-data": "^4.0.4",
     "multer": "^2.0.2",
-    "openai": "^6.2.0"
+    "openai": "^6.2.0",
+    "pdf-parse": "^2.2.6"
   },
   "devDependencies": {
     "@types/node": "^24.7.1",
