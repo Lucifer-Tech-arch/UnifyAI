@@ -3,7 +3,7 @@ import { useState } from 'react'
 
 const GenerateImages = () => {
   const imagestyles = [
-    'Realistic', 'Ghibli Style', 'Anime style', 'Cartoon style', 'Fantasy style', 'Realistic style', '3D style', 'Portrait style'
+    'Realistic', 'Ghibli Style', 'Anime style', 'Cartoon style', 'Fantasy style', '3D style', 'Portrait style'
   ]
   const [selectedstyle, setSelectedstyle] = useState(imagestyles[0])
   const [input, setInput] = useState('');
