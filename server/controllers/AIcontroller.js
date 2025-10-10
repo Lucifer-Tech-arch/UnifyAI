@@ -3,9 +3,9 @@
 import OpenAI from "openai";
 import sql from "../config/db.js";
 import { clerkClient } from "@clerk/express";
-import { ImageClient } from "@google/generative-ai";
 import {v2 as cloudinary} from 'cloudinary'
-import { GoogleGenAI, PersonGeneration } from "@google/genai";
+import axios from "axios";
+import FormData from "form-data";
 
 {/*------------------- API Initialization---------------- */}
 
@@ -120,71 +120,88 @@ export const generateblogtitle = async (req, res) => {
 
 {/* ---------------Generate Image-------------------- */}
 
-export const generateImage = async (req, res) => {
+export const generateimage = async (req, res) => {
   try {
     // ✅ Extract user info
-    const { userId, plan, free_usage } = req.auth();
+    const { userId, plan, free_usage } = req.auth;
     const { prompt, style, publish } = req.body;
 
+    // ✅ Check authentication
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized user!" });
     }
 
+    // ✅ Free plan limit check
     if (plan === "free" && free_usage >= 10) {
-      return res.status(403).json({ success: false, message: "Free limit reached. Upgrade to continue!" });
+      return res.status(403).json({
+        success: false,
+        message: "Free limit reached. Upgrade to continue!",
+      });
     }
 
     // ✅ Allowed styles
-    const allowedStyles = ["Realistic", "Ghibli Style", "Anime Style", "Cartoon Style", "Fantasy Style", "3D Style", "Portrait Style"];
+    const allowedStyles = [
+      "Realistic",
+      "Ghibli Style",
+      "Anime Style",
+      "Cartoon Style",
+      "Fantasy Style",
+      "3D Style",
+      "Portrait Style",
+    ];
     const selectedStyle = allowedStyles.includes(style) ? style : "Realistic";
     const finalPrompt = `Generate an image of ${prompt} in ${selectedStyle} style`;
 
-    // ✅ Initialize Google Gemini / GenAI
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    // ✅ Prepare form data for ClipDrop API
+    const form = new FormData();
+    form.append("prompt", finalPrompt);
 
-    // ✅ Generate image
-    const response = await ai.models.generateImages({
-      model: "models/imagen-4.0-generate-001", // Make sure this is enabled in your project
-      prompt: finalPrompt,
-      config: {
-        numberOfImages: 1,
-        outputMimeType: "image/jpeg",
-        personGeneration: PersonGeneration.ALLOW_ALL,
-        aspectRatio: "1:1",
-        imageSize: "1K",
-      },
-    });
+    // ✅ Call ClipDrop API
+    const { data } = await axios.post(
+      "https://clipdrop-api.co/text-to-image/v1",
+      form,
+      {
+        headers: {
+          "x-api-key": process.env.CLIPDROP_API_KEY,
+          ...form.getHeaders(),
+        },
+        responseType: "arraybuffer",
+      }
+    );
 
-    if (!response?.generatedImages || response.generatedImages.length === 0) {
-      return res.status(500).json({ success: false, message: "No image generated." });
-    }
+    // ✅ Convert response to base64
+    const base64image = `data:image/png;base64,${Buffer.from(data, "binary").toString("base64")}`;
 
-    const imageBase64 = response.generatedImages[0]?.image?.imageBytes;
-    if (!imageBase64) {
-      return res.status(500).json({ success: false, message: "Image bytes missing from response." });
-    }
-
-    // ✅ Upload base64 image directly to Cloudinary
-    const { secure_url } = await cloudinary.uploader.upload(`data:image/jpeg;base64,${imageBase64}`, {
+    // ✅ Upload to Cloudinary
+    const { secure_url } = await cloudinary.uploader.upload(base64image, {
       folder: "ai_images",
     });
 
-    // ✅ Save record in database
+    // ✅ Save record to database
     await sql`
       INSERT INTO creations (user_id, prompt, content, type, publish)
       VALUES (${userId}, ${prompt}, ${secure_url}, 'generate-image', ${publish ?? false});
     `;
 
-    // ✅ Update free usage
+    // ✅ Update free usage in Clerk
     if (plan !== "premium") {
       await clerkClient.users.updateUserMetadata(userId, {
-        privateMetadata: { free_usage: free_usage + 1 },
+        privateMetadata: {
+          free_usage: free_usage + 1,
+        },
       });
     }
 
-    return res.status(200).json({ success: true, content: secure_url });
+    // ✅ Return success
+    return res.status(200).json({
+      success: true,
+      content: secure_url,
+    });
   } catch (error) {
-    console.error("❌ Gemini image generation failed:", error);
-    return res.status(500).json({ success: false, message: error.message || "Something went wrong while generating the image." });
+    console.error("❌ Image generation failed:", error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || "Something went wrong while generating the image.",
+    });
   }
 };
