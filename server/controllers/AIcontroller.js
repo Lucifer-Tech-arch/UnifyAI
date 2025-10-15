@@ -7,7 +7,8 @@ import {v2 as cloudinary} from 'cloudinary'
 import fs from 'fs';
 import axios from "axios";
 import FormData from "form-data";
-import pdf from 'pdf-parse/lib/pdf-parse.js'
+import pdf from 'pdf-parse-fork';
+
 
 {/*------------------- API Initialization---------------- */}
 
@@ -298,7 +299,7 @@ export const reviewresume = async(req,res) => {
     const content = response.choices[0].message.content;
      await sql`
       INSERT INTO creations (user_id, prompt, content, type)
-      VALUES (${userId},'review the resume',${content},'review resume');
+      VALUES (${userId},'review the resume',${content},'review-resume');
     `;
     return res.status(200).json({success: true, content: content})
 

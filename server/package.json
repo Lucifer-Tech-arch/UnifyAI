@@ -23,7 +23,8 @@
     "form-data": "^4.0.4",
     "multer": "^2.0.2",
     "openai": "^6.2.0",
-    "pdf-parse": "^2.2.6"
+    "pdf-parse": "^2.2.6",
+    "pdf-parse-fork": "^1.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.7.1",

@@ -4,6 +4,7 @@ import cors from 'cors';
 import { clerkMiddleware, requireAuth } from '@clerk/express';
 import Airouter from './routes/AIroutes.js';
 import connctcloudinary from './config/cloudinary.js';
+import userRouter from './routes/userroutes.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -19,6 +20,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/ai', Airouter);
+app.use('/api/user',userRouter);
 app.use(requireAuth());
 
 app.listen(port, () => {
