@@ -1,16 +1,30 @@
 import sql from '../config/db.js'
 import { clerkClient } from "@clerk/express";
 
-export const getusercreations = async(req,res) => {
-    try {
-        const {userId} = req.auth();
-        const creation = await sql `SELECT * FROM creations WHERE user_id = ${userId} ORDER BY created_at DESC`
-        return res.json({success: true, creation});
-    } catch (error) {
-        console.log(error);
-        res.json({success: false, message: error.message});
-    }
-}
+export const getUserCreations = async (req, res) => {
+  try {
+    const { userId, plan } = req;
+
+    // Fetch creations
+    const creationsRaw = await sql`
+      SELECT * FROM creations
+      WHERE user_id = ${userId}
+      ORDER BY created_at DESC
+    `;
+
+    // Convert to plain objects to avoid circular JSON issues
+    const creations = creationsRaw.map(c => ({ ...c }));
+
+    return res.json({
+      success: true,
+      creations,
+      plan,
+    });
+  } catch (error) {
+    console.error("getUserCreations error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
 
 export const getpublishcreations = async(req,res) => {
     try {

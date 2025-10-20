@@ -1,24 +1,35 @@
+// middleware/auth.js
 import { clerkClient } from "@clerk/express";
 
 export const auth = async (req, res, next) => {
   try {
-    // Clerk automatically attaches auth info via requireAuth()
     const { userId } = req.auth();
-
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    // Get the latest user data from Clerk
+    // Fetch user from Clerk
     const user = await clerkClient.users.getUser(userId);
-    const plan = user.privateMetadata.plan || "free";
-    const isPremium = plan === "premium";
 
-    // Attach to request for later use
+    // Safe plan handling
+    let plan =
+      user.privateMetadata?.plan?.toLowerCase() ||
+      user.publicMetadata?.plan?.toLowerCase() ||
+      "free";
+
+    // Log if plan missing
+    if (!user.privateMetadata?.plan && !user.publicMetadata?.plan) {
+      console.warn(`User ${userId} has no plan set. Defaulting to Free.`);
+    }
+
+    const isPremium = plan === "premium";
+    const free_usage = isPremium ? 0 : user.privateMetadata?.free_usage || 0;
+
+    // Attach to request
     req.user = user;
     req.userId = userId;
     req.plan = plan;
-    req.free_usage = isPremium ? 0 : (user.privateMetadata.free_usage || 0);
+    req.free_usage = free_usage;
 
     next();
   } catch (error) {

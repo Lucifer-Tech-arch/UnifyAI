@@ -44,7 +44,7 @@ const Sidebar = ({ sidebar, setsidebar }) => {
                 <h1 className="pt-1 mb-3 text-center">{user.fullName}</h1>
 
                 <div className="flex flex-col gap-1 px-5 text-sm">
-                    {navitems.map(({ to, label, Icon }) => (
+                    {navitems.map(({ to, label,Icon }) => (
                         <NavLink
                             key={to}
                             to={to}
