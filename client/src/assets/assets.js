@@ -12,7 +12,7 @@ import linkdin from './linkdin.png';
 import insta from './insta.png';
 import framer from './framer.png'
 import google from './google.png';
-import logo from './Logo.png'
+import logo from './logo.png'
 
 export const assets = {
     logo,
